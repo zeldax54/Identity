@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Models", "Identity
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.DataAccess", "Identity.DataAccess\Identity.DataAccess.csproj", "{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Bussiness", "Identity.Bussiness\Identity.Bussiness.csproj", "{16365F36-4158-48A7-9626-054DFEA7E1B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
