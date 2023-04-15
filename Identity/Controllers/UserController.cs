@@ -19,10 +19,17 @@ namespace Identity.Controllers
         }
 
         [HttpGet("register")]
-        public async Task<ActionResult<IdentityResponse<string>>> Register(string name, string lastname, string email, string password)
+        public async Task<ActionResult<IdentityResponse<string>>> Register([FromQuery] RegisterRequest request)
         {
-            var result =  await _identityUserManager.Register(name,lastname,email,password);
-            return Ok( new IdentityResponse<string>() { Data = result,StatusCode = 200,Success = true });
+            var result = await _identityUserManager.Register(request.Name, request.LastName, request.Email, request.Password);
+            return Ok(result);
+        }
+
+        [HttpGet("login")]
+        public async Task<ActionResult<IdentityResponse<string>>> Login([FromQuery] RegisterRequest request)
+        {
+            var result = await _identityUserManager.Register(request.Name, request.LastName, request.Email, request.Password);
+            return Ok(result);
         }
     }
 }

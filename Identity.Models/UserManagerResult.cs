@@ -10,5 +10,6 @@ namespace Identity.Models
     {
         public int ResultCode { get; set; }
         public string ResultMessage { get; set; } = string.Empty;
+        public bool Susscess { get; set; } = true;
     }
 }

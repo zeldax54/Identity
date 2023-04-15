@@ -24,7 +24,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDB")));
 /*Identity*/
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDBContext>().AddDefaultTokenProviders();
-builder.Services.ConfigureApplicationCookie(opt => opt.LoginPath = "UserAuthentication/Login");
+builder.Services.ConfigureApplicationCookie(opt => opt.LoginPath = "/User/Login");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

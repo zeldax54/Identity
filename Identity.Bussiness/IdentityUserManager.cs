@@ -8,7 +8,7 @@ namespace Identity.Bussiness
 {
     public interface IIdentityUserManager
     { 
-        Task<string> Register(string name,string lastname,string email,string password);
+        Task<IdentityResponse<string>> Register(string name,string lastname,string email,string password);
         Task<UserManagerResult> LogIn(string email,string password);
     }
     public class IdentityUserManager : IIdentityUserManager
@@ -24,31 +24,59 @@ namespace Identity.Bussiness
             _signInManager = signInManager;
         }
 
-        public async Task<string> Register(string name, string lastname, string email, string password)
+        public async Task<IdentityResponse<string>> Register(string name, string lastname, string email, string password)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)            
-               return IdentityMessages.EmailExist;
-            
-            var applicationUser = new ApplicationUser()
+            try
             {
-                Name = name,
-                LastName = lastname,
-                Email = email,
-                Isactive = false,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = email.Split('@')[0],
-                EmailConfirmed = false,
-            };
-            var result = await _userManager.CreateAsync(applicationUser,password);
-            if (!result.Succeeded) {
-                _logger.LogError(string.Join(Environment.NewLine, result.Errors));
-                return IdentityMessages.UserCreationFail;
+                var user = await _userManager.FindByEmailAsync(email);
+                var registerResult = new IdentityResponse<string>();
+               
+                if (user != null) 
+                {
+                    registerResult.Success = false;
+                    registerResult.ErrorMessage = IdentityMessages.EmailExist;
+                    registerResult.StatusCode = 400;              
+                    return registerResult;
+                }                 
+
+                var applicationUser = new ApplicationUser()
+                {
+                    Name = name,
+                    LastName = lastname,
+                    Email = email,
+                    Isactive = true,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    UserName = email.Split('@')[0],
+                    EmailConfirmed = false,
+                };
+
+                var result = await _userManager.CreateAsync(applicationUser, password);
+                if (!result.Succeeded)
+                {
+                    _logger.LogError(string.Join(Environment.NewLine, result.Errors));
+                    registerResult.Success = false;
+                    registerResult.ErrorMessage = IdentityMessages.UserCreationFail;
+                    registerResult.StatusCode = 400;
+                    return registerResult;
+                }
+               
+                var userRole = Enum.GetName(Roles.User);
+                await _userManager.AddToRoleAsync(applicationUser, userRole);
+                registerResult.Success = true;
+                registerResult.Data = IdentityMessages.UserCreated;
+                registerResult.StatusCode = 200;
+              
+                return registerResult;
             }
-            //  _roleManager.
-            var userRole = Enum.GetName(Roles.User);
-            await _userManager.AddToRoleAsync(applicationUser, userRole);
-            return IdentityMessages.UserCreated;               
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                var registerResult = new IdentityResponse<string>();
+                registerResult.Success = false;
+                registerResult.ErrorMessage = IdentityMessages.UserCreationFail;
+                registerResult.StatusCode = 400;
+                return registerResult;
+            }           
         }
 
         public async Task<UserManagerResult> LogIn(string email,string password)
