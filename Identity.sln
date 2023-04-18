@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity", "Identity\Identity.csproj", "{D5CC7056-6D83-4F34-B7B0-16CC5924C450}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity", "Identity\Identity.csproj", "{D5CC7056-6D83-4F34-B7B0-16CC5924C450}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Models", "Identity.Models\Identity.Models.csproj", "{5BAA96B5-DE57-4DA5-909F-8AF83DAD2280}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.Models", "Identity.Models\Identity.Models.csproj", "{5BAA96B5-DE57-4DA5-909F-8AF83DAD2280}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.DataAccess", "Identity.DataAccess\Identity.DataAccess.csproj", "{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.DataAccess", "Identity.DataAccess\Identity.DataAccess.csproj", "{B3EE1EDC-44C6-4F43-8B26-7FA6A4333C42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Bussiness", "Identity.Bussiness\Identity.Bussiness.csproj", "{16365F36-4158-48A7-9626-054DFEA7E1B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.Bussiness", "Identity.Bussiness\Identity.Bussiness.csproj", "{16365F36-4158-48A7-9626-054DFEA7E1B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.TokenHandler", "Identity.TokenHandler\Identity.TokenHandler.csproj", "{4C879F2F-8385-4347-A304-9051357C3548}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16365F36-4158-48A7-9626-054DFEA7E1B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C879F2F-8385-4347-A304-9051357C3548}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C879F2F-8385-4347-A304-9051357C3548}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C879F2F-8385-4347-A304-9051357C3548}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C879F2F-8385-4347-A304-9051357C3548}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Identity.Models\Identity.Models.csproj" />
+    <ProjectReference Include="..\Identity.TokenHandler\Identity.TokenHandler.csproj" />
   </ItemGroup>
 
 </Project>

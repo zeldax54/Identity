@@ -1,8 +1,14 @@
 using Identity.Bussiness;
 using Identity.DataAccess.Contexts;
 using Identity.Models;
+using Identity.TokenHandler;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,12 +25,37 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 
+var keySecret = builder.Configuration["JwtSigningKey"];
+var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keySecret));
+
+builder.Services.AddTransient<IJwtSignInHandler>(provider => {
+    return new JwtSignInHandler(symmetricKey);
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters.ValidateIssuerSigningKey = true;
+    options.TokenValidationParameters.IssuerSigningKey = symmetricKey;
+    options.TokenValidationParameters.ValidAudience = builder.Configuration["ValidTokenAudiences"];
+    options.TokenValidationParameters.ValidIssuer = builder.Configuration["TokenIssuer"];
+});
+
+builder.Services.AddAuthorization(auth =>
+{
+    auth.AddPolicy("Bearer", new AuthorizationPolicyBuilder()
+        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser().Build());  
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDB")));
 /*Identity*/
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDBContext>().AddDefaultTokenProviders();
-builder.Services.ConfigureApplicationCookie(opt => opt.LoginPath = "/User/Login");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

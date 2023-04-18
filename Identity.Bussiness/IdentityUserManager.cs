@@ -1,27 +1,41 @@
 ﻿using Identity.Models;
 using Identity.Models.Messages;
+using Identity.TokenHandler;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Identity.Bussiness
 {
     public interface IIdentityUserManager
     { 
         Task<IdentityResponse<string>> Register(string name,string lastname,string email,string password);
-        Task<UserManagerResult> LogIn(string email,string password);
+        Task<IdentityResponse<string>> LogIn(string email,string password);
+        Task LogOff();
     }
     public class IdentityUserManager : IIdentityUserManager
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<IdentityUserManager> _logger;
         private readonly SignInManager<ApplicationUser> _signInManager;
-       
-        public IdentityUserManager(UserManager<ApplicationUser> userManager, ILogger<IdentityUserManager> logger, SignInManager<ApplicationUser> signInManager)
+        private readonly IJwtSignInHandler _tokenFactory;
+        IUserClaimsPrincipalFactory<ApplicationUser> _claimsFactory;
+        IConfiguration _configuration;
+
+
+        public IdentityUserManager(UserManager<ApplicationUser> userManager, ILogger<IdentityUserManager> logger, SignInManager<ApplicationUser> signInManager, 
+            IJwtSignInHandler tokenFactor, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory, IConfiguration configuration)
         {
             _userManager = userManager;
             _logger = logger;
             _signInManager = signInManager;
+            _tokenFactory = tokenFactor;
+            _claimsFactory = claimsFactory;
+            _configuration = configuration;
         }
 
         public async Task<IdentityResponse<string>> Register(string name, string lastname, string email, string password)
@@ -79,22 +93,59 @@ namespace Identity.Bussiness
             }           
         }
 
-        public async Task<UserManagerResult> LogIn(string email,string password)
+        public async Task<IdentityResponse<string>> LogIn(string email,string password)
         {
-            UserManagerResult result = new UserManagerResult();
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            try
             {
-                result.ResultCode = 0;
-                result.ResultMessage = IdentityMessages.WrongCredentials;
-            }          
-            else if (await _userManager.CheckPasswordAsync(user, password)) 
-            {
-                await _signInManager.PasswordSignInAsync(user, password, false, false);
-                result.ResultCode = 1;
-                result.ResultMessage = IdentityMessages.LogInCorrect;
+                var loginresult = new IdentityResponse<string>();
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    loginresult.StatusCode = 400;
+                    loginresult.ErrorMessage = IdentityMessages.WrongCredentials;
+                }
+                else if (await _userManager.CheckPasswordAsync(user, password))
+                {
+                    _logger.LogInformation($"Login user {email}. {DateTime.UtcNow}");
+                    await _signInManager.PasswordSignInAsync(user, password, true, false);
+                    var principal = await _claimsFactory.CreateAsync(user);
+
+                    /* var nuevaClaim = new Claim("callerRight", "");
+                     ((ClaimsIdentity)principal.Identity).AddClaim(nuevaClaim);*/
+
+                    loginresult.StatusCode = 200;
+
+                    var adminRole = principal.Claims.Where(c => c.Type == ClaimTypes.Role)?.Select(c => c.Value);
+                   
+                    string? audience = (adminRole!= null && adminRole.Contains("Admin"))
+                        ? _configuration["AdminAudience"] : _configuration["ClientAudience"];
+
+                    string? issuer = _configuration["TokenIssuer"];
+
+                    loginresult.Data = await _tokenFactory.BuildJwt(principal,issuer, audience);
+                    return loginresult;
+                }
+                else
+                {
+                    loginresult.StatusCode = 400;
+                    loginresult.ErrorMessage = IdentityMessages.WrongCredentials;
+                }
+                return loginresult;
             }
-            return result;
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                var loginresult = new IdentityResponse<string>();
+                loginresult.Success = false;
+                loginresult.ErrorMessage = IdentityMessages.WrongCredentials;
+                loginresult.StatusCode = 400;
+                return loginresult;
+            }
+        }
+
+        public async Task LogOff()
+        {
+            await _signInManager.SignOutAsync(); 
         }
     }
 }
