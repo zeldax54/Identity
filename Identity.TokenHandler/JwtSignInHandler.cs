@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Identity.Models;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Identity.TokenHandler
 {
@@ -15,6 +11,7 @@ namespace Identity.TokenHandler
     {
         Task<string> BuildJwt(ClaimsPrincipal principal, string tokenIssuer, string tokenAudience);
         Task<bool> validate(string token, string tokenIssuer, string tokenAudience, string role);
+        Task<UserInfo> UserInfo(string token, string tokenIssuer, string tokenAudience);
     }
     public class JwtSignInHandler : IJwtSignInHandler    {
  
@@ -60,7 +57,33 @@ namespace Identity.TokenHandler
             }
            
             return await Task.FromResult(false);
-
         }
+
+        public async Task<UserInfo> UserInfo(string token, string tokenIssuer, string tokenAudience)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                IssuerSigningKey = key,
+                ValidIssuer = tokenIssuer,
+                ValidAudience = tokenAudience,
+                ClockSkew = TimeSpan.Zero
+            };
+            SecurityToken validatedToken;
+            var claimsPrincipal = tokenHandler.ValidateToken(token, tokenValidationParameters, out validatedToken);
+            if (validatedToken is JwtSecurityToken jwtSecurityToken)
+            {
+                
+                var userId = jwtSecurityToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;                
+                var username = jwtSecurityToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                return await Task.FromResult(new Models.UserInfo() { 
+                UserId = userId,
+                UserName = username
+                });
+            }
+            return await Task.FromResult(new UserInfo());
+        }
+
+       
     }
 }

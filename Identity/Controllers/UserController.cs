@@ -1,4 +1,5 @@
-﻿using Identity.Bussiness;
+﻿using Azure.Core;
+using Identity.Bussiness;
 using Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,11 +12,13 @@ namespace Identity.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase    
     {
+        private readonly IConfiguration _configuration;
         private readonly IIdentityUserManager _identityUserManager;
 
-        public UserController(IIdentityUserManager identityUserManager) 
+        public UserController(IIdentityUserManager identityUserManager, IConfiguration configuration) 
         {
             _identityUserManager = identityUserManager;
+            _configuration = configuration;
         }
       
         [AllowAnonymous]
@@ -34,12 +37,14 @@ namespace Identity.Controllers
         }
 
         [Authorize("Bearer",Roles = "Admin")]
-        [HttpGet("logoff")]
-        public async Task<ActionResult<IdentityResponse<string>>> LogOff()
+        [HttpGet("UserInfo")]
+        public async Task<IdentityResponse<UserInfo>> UserInfo()
         {
-            var c = HttpContext;
-             await _identityUserManager.LogOff();
-            return Ok();
+            string token = Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            string? issuer = _configuration["TokenIssuer"];
+            string? audience = _configuration["AdminAudience"];
+            var info = await _identityUserManager.UserInfo(token,issuer, audience);
+            return new IdentityResponse<UserInfo> { Data = info, StatusCode = 200, Success = true };
         }
     }
 }

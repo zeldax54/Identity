@@ -14,12 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSelfOrigins", builder =>
+    options.AddPolicy("AllowSelfOrigins", c =>
     {
-        builder.WithOrigins("http://localhost:4200");
-        builder.AllowAnyHeader();
-        builder.AllowAnyMethod();
-        builder.AllowCredentials();
+        c.WithOrigins(builder.Configuration["AdminAppOrigin"]);
+        c.AllowAnyHeader();
+        c.AllowAnyMethod();
+        c.AllowCredentials();
     });
 });
 
@@ -40,7 +40,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters.ValidateIssuerSigningKey = true;
     options.TokenValidationParameters.IssuerSigningKey = symmetricKey;
-    options.TokenValidationParameters.ValidAudience = builder.Configuration["ValidTokenAudiences"];
+    options.TokenValidationParameters.ValidAudiences = builder.Configuration["ValidTokenAudiences"].Split(',').ToList();
     options.TokenValidationParameters.ValidIssuer = builder.Configuration["TokenIssuer"];
 });
 

@@ -16,6 +16,7 @@ namespace Identity.Bussiness
         Task<IdentityResponse<string>> Register(string name,string lastname,string email,string password);
         Task<IdentityResponse<string>> LogIn(string email,string password);
         Task LogOff();
+        Task<UserInfo> UserInfo(string token, string issuer, string audience);
     }
     public class IdentityUserManager : IIdentityUserManager
     {
@@ -107,6 +108,7 @@ namespace Identity.Bussiness
                 else if (await _userManager.CheckPasswordAsync(user, password))
                 {
                     _logger.LogInformation($"Login user {email}. {DateTime.UtcNow}");
+                    //cookie stuff
                     await _signInManager.PasswordSignInAsync(user, password, true, false);
                     var principal = await _claimsFactory.CreateAsync(user);
 
@@ -146,6 +148,11 @@ namespace Identity.Bussiness
         public async Task LogOff()
         {
             await _signInManager.SignOutAsync(); 
+        }
+
+        public async Task<UserInfo> UserInfo(string token,string issuer,string audience)
+        {
+            return await _tokenFactory.UserInfo(token, issuer, audience);
         }
     }
 }
