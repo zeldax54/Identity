@@ -29,7 +29,7 @@ var keySecret = builder.Configuration["JwtSigningKey"];
 var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keySecret));
 
 builder.Services.AddTransient<IJwtSignInHandler>(provider => {
-    return new JwtSignInHandler(symmetricKey);
+    return new JwtSignInHandler(symmetricKey, provider.GetRequiredService<IConfiguration>());
 });
 
 builder.Services.AddAuthentication(options =>

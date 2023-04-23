@@ -1,4 +1,5 @@
 ﻿using Identity.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Data;
@@ -12,25 +13,32 @@ namespace Identity.TokenHandler
         Task<string> BuildJwt(ClaimsPrincipal principal, string tokenIssuer, string tokenAudience);
         Task<bool> validate(string token, string tokenIssuer, string tokenAudience, string role);
         Task<UserInfo> UserInfo(string token, string tokenIssuer, string tokenAudience);
+        Task<string> RefreshToken(ClaimsPrincipal principal, string oldToken, string tokenIssuer, string tokenAudience, string role);
     }
-    public class JwtSignInHandler : IJwtSignInHandler    {
- 
-        private readonly SymmetricSecurityKey key;  
+    public class JwtSignInHandler : IJwtSignInHandler
+    {
 
-        public JwtSignInHandler(SymmetricSecurityKey symmetricKey)
+        private readonly SymmetricSecurityKey _key;
+        private readonly IConfiguration _configuration;
+        private readonly int _tokenLifeTme;
+
+
+        public JwtSignInHandler(SymmetricSecurityKey symmetricKey, IConfiguration configuration)
         {
-            this.key = symmetricKey;            
+            _key = symmetricKey;
+            _configuration = configuration;
+            _tokenLifeTme = int.Parse(_configuration["tokenLife"]);
         }
-
+    
         public async Task<string> BuildJwt(ClaimsPrincipal principal,string tokenIssuer,string tokenAudience)
         {
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: tokenIssuer,
                 audience: tokenAudience,
                 claims: principal.Claims,
-                expires: DateTime.Now.AddMinutes(30),
+                expires: DateTime.Now.AddMinutes(_tokenLifeTme),
                 signingCredentials: creds
             );
             return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));         
@@ -41,7 +49,7 @@ namespace Identity.TokenHandler
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenValidationParameters = new TokenValidationParameters
             {                
-                IssuerSigningKey = key,
+                IssuerSigningKey = _key,
                 ValidIssuer = tokenIssuer,
                 ValidAudience = tokenAudience,
                 ClockSkew = TimeSpan.Zero
@@ -64,7 +72,7 @@ namespace Identity.TokenHandler
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenValidationParameters = new TokenValidationParameters
             {
-                IssuerSigningKey = key,
+                IssuerSigningKey = _key,
                 ValidIssuer = tokenIssuer,
                 ValidAudience = tokenAudience,
                 ClockSkew = TimeSpan.Zero
@@ -84,6 +92,11 @@ namespace Identity.TokenHandler
             return await Task.FromResult(new UserInfo());
         }
 
-       
+        public async Task<string> RefreshToken(ClaimsPrincipal principal,string oldToken, string tokenIssuer, string tokenAudience, string role) 
+        {
+            if (await validate(oldToken, tokenIssuer, tokenAudience, role))             
+                return await BuildJwt(principal, tokenIssuer, tokenAudience);            
+            throw new Exception("Invalid token for Refresh");
+        }
     }
 }
