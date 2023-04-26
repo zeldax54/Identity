@@ -4,13 +4,14 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Security.Claims;
 
 namespace Identity.TokenHandler
 {
     public interface IJwtSignInHandler 
     {
-        Task<string> BuildJwt(ClaimsPrincipal principal, string tokenIssuer, string tokenAudience);
+        Task<string> BuildJwt(ClaimsPrincipal principal, string tokenIssuer, string tokenAudience, bool isrefresh = false);
         Task<bool> validate(string token, string tokenIssuer, string tokenAudience, string role);
         Task<UserInfo> UserInfo(string token, string tokenIssuer, string tokenAudience);
         Task<string> RefreshToken(ClaimsPrincipal principal, string oldToken, string tokenIssuer, string tokenAudience, string role);
@@ -30,15 +31,16 @@ namespace Identity.TokenHandler
             _tokenLifeTme = int.Parse(_configuration["tokenLife"]);
         }
     
-        public async Task<string> BuildJwt(ClaimsPrincipal principal,string tokenIssuer,string tokenAudience)
-        {
+        public async Task<string> BuildJwt(ClaimsPrincipal principal,string tokenIssuer,string tokenAudience, bool isrefresh = false)
+        {        
+          
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: tokenIssuer,
                 audience: tokenAudience,
-                claims: principal.Claims,
-                expires: DateTime.Now.AddMinutes(_tokenLifeTme),
+                claims: isrefresh? principal.Claims.Where(c=>c.Type!= "aud") : principal.Claims,
+                expires: DateTime.UtcNow.AddMinutes(_tokenLifeTme),
                 signingCredentials: creds
             );
             return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));         
@@ -95,7 +97,7 @@ namespace Identity.TokenHandler
         public async Task<string> RefreshToken(ClaimsPrincipal principal,string oldToken, string tokenIssuer, string tokenAudience, string role) 
         {
             if (await validate(oldToken, tokenIssuer, tokenAudience, role))             
-                return await BuildJwt(principal, tokenIssuer, tokenAudience);            
+                return await BuildJwt(principal, tokenIssuer, tokenAudience,true);            
             throw new Exception("Invalid token for Refresh");
         }
     }
