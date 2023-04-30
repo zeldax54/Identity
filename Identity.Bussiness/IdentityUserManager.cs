@@ -14,7 +14,7 @@ namespace Identity.Bussiness
     public interface IIdentityUserManager
     { 
         Task<IdentityResponse<string>> Register(string name,string lastname,string email,string password);
-        Task<IdentityResponse<string>> LogIn(string email,string password);
+        Task<IdentityResponse<Tuple<string, string>>> LogIn(string email,string password);
         Task LogOff();
         Task<UserInfo> UserInfo(string token, string issuer, string audience);
     }
@@ -94,11 +94,11 @@ namespace Identity.Bussiness
             }           
         }
 
-        public async Task<IdentityResponse<string>> LogIn(string email,string password)
+        public async Task<IdentityResponse<Tuple<string, string>>> LogIn(string email,string password)
         {
             try
             {
-                var loginresult = new IdentityResponse<string>();
+                var loginresult = new IdentityResponse<Tuple<string,string>>();
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
@@ -123,8 +123,9 @@ namespace Identity.Bussiness
                         ? _configuration["AdminAudience"] : _configuration["ClientAudience"];
 
                     string? issuer = _configuration["TokenIssuer"];
-
-                    loginresult.Data = await _tokenFactory.BuildJwt(principal,issuer, audience);
+                    string token = await _tokenFactory.BuildJwt(principal, issuer, audience);
+                    Tuple<string, string> t = Tuple.Create(token,user.Id);                   
+                    loginresult.Data = t;
                     return loginresult;
                 }
                 else
@@ -137,7 +138,7 @@ namespace Identity.Bussiness
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                var loginresult = new IdentityResponse<string>();
+                var loginresult = new IdentityResponse<Tuple<string,string>>();
                 loginresult.Success = false;
                 loginresult.ErrorMessage = IdentityMessages.WrongCredentials;
                 loginresult.StatusCode = 400;

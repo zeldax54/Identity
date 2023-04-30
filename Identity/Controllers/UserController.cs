@@ -30,7 +30,7 @@ namespace Identity.Controllers
         }
         [AllowAnonymous]
         [HttpGet("login")]
-        public async Task<ActionResult<IdentityResponse<string>>> Login([FromQuery] RegisterRequest request)
+        public async Task<IActionResult> Login([FromQuery] RegisterRequest request)
         {
             var result = await _identityUserManager.LogIn(request.Email, request.Password);
             return Ok(result);
