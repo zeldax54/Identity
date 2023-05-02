@@ -27,11 +27,9 @@ namespace Identity.Controllers
         {
             try
             {               
-                string? token = request.Token.Replace("Bearer ", "");
-                _logger.LogInformation($"Validation try for token {token}");                
+                string? token = request.Token.Replace("Bearer ", "");                           
                 string? audience = request.Role == Enum.GetName(Roles.Admin) ? _configuration["AdminAudience"] : _configuration["ClientAudience"];
-                var valid = await _tokenFactory.validate(token, _issuer, audience, request.Role);
-                _logger.LogInformation($"{valid} validation result for token");  
+                var valid = await _tokenFactory.validate(token, _issuer, audience, request.Role);             
                 return new IdentityResponse<bool> { Data = valid,StatusCode = 200,Success = true };               
             }
             catch (Exception e)
@@ -50,8 +48,7 @@ namespace Identity.Controllers
             {
                 var claimPrincipal = HttpContext.User;
                 string? audience = request.Role == Enum.GetName(Roles.Admin) ? _configuration["AdminAudience"] : _configuration["ClientAudience"];
-                string token = await _tokenFactory.RefreshToken(claimPrincipal, request.Token, _issuer, audience, request.Role);
-                _logger.LogInformation($"Token refreshed for {claimPrincipal.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value}");
+                string token = await _tokenFactory.RefreshToken(claimPrincipal, request.Token, _issuer, audience, request.Role);             
                 return new IdentityResponse<string> { Data = token, StatusCode = 200, Success = true };
             }
             catch (Exception e)
